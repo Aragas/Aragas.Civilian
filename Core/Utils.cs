@@ -6,8 +6,7 @@ namespace Aragas.Core
 {
     public class Utils
     {
-        private static MethodInfo SetItemFlagsMethod { get; } =
-            typeof(ItemObject).GetProperty("ItemFlags").SetMethod;
+        private static MethodInfo SetItemFlagsMethod { get; } = typeof(ItemObject).GetProperty("ItemFlags").SetMethod;
 
         public static void SetCivilian(ItemObject itemObject)
         {

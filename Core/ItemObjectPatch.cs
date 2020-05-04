@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿#define CRAFTED
+using HarmonyLib;
 
 using System.Xml;
 
@@ -10,7 +11,7 @@ namespace Aragas.Core
     [HarmonyPatch("Deserialize")]
     public class ItemObjectPatch1
     {
-        public static void Postfix(ItemObject __instance, MBObjectManager objectManager, XmlNode node)
+        public static void Postfix(ItemObject __instance, XmlNode node)
         {
             switch (node.Name)
             {
@@ -25,6 +26,7 @@ namespace Aragas.Core
         }
     }
 
+#if CRAFTED
     [HarmonyPatch(typeof(ItemObject))]
     [HarmonyPatch("InitCraftedItemObject")]
     public class ItemObjectPatch2
@@ -34,4 +36,5 @@ namespace Aragas.Core
             Utils.SetCivilian(itemObject);
         }
     }
+#endif
 }

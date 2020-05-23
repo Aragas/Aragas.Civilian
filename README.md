@@ -14,6 +14,6 @@
    <img src="https://staticdelivery.nexusmods.com/mods/3174/images/390/390-1586522727-608838522.jpeg" width="800">
 </p>
 
-Makes every item in the game Civilian!
-Will work with custom items too!
-Should be compatible with any mod that modifies or adds new items
+Makes every item in the game Civilian!  
+Will work with custom items too!  
+Should be compatible with any mod that modifies or adds new items  

@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31105.61
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aragas.Civilized", "Aragas.Civilized\Aragas.Civilized.csproj", "{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{08E2E6D0-6EBE-4388-B53E-F953D5F445CC}"
+	ProjectSection(SolutionItems) = preProject
+		..\changelog.txt = ..\changelog.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E2586F1C-0282-4527-A350-077755117D75}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{7A3F1067-2325-4655-AB53-30F928DA17F7}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\publish.yml = ..\.github\workflows\publish.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Beta_Debug|x64 = Beta_Debug|x64
+		Beta_Release|x64 = Beta_Release|x64
+		Stable_Debug|x64 = Stable_Debug|x64
+		Stable_Release|x64 = Stable_Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Beta_Debug|x64.ActiveCfg = Beta_Debug|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Beta_Debug|x64.Build.0 = Beta_Debug|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Beta_Release|x64.ActiveCfg = Beta_Release|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Beta_Release|x64.Build.0 = Beta_Release|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Stable_Debug|x64.ActiveCfg = Stable_Debug|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Stable_Debug|x64.Build.0 = Stable_Debug|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Stable_Release|x64.ActiveCfg = Stable_Release|x64
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B}.Stable_Release|x64.Build.0 = Stable_Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{536DB0B4-D81A-43E8-9DCF-E6C5AF0EBF5B} = {E2586F1C-0282-4527-A350-077755117D75}
+		{E2586F1C-0282-4527-A350-077755117D75} = {08E2E6D0-6EBE-4388-B53E-F953D5F445CC}
+		{7A3F1067-2325-4655-AB53-30F928DA17F7} = {08E2E6D0-6EBE-4388-B53E-F953D5F445CC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C847C2DC-1107-4686-94D9-4CB938D28AB2}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,154 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  # Disable the .NET logo in the console output.
+  DOTNET_NOLOGO: true
+  # Disable the .NET first time experience to skip caching NuGet packages and speed up the build.
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # Disable sending .NET CLI telemetry to Microsoft.
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-module:
+    name: Build for NexusMods
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@master
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Setup BUTR GPR
+      uses: actions/setup-dotnet@master
+      with:
+        source-url: https://nuget.pkg.github.com/BUTR/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Build Aragas.Civilized
+      run: >-
+        mkdir bannerlord;
+        dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord";
+      shell: pwsh
+
+    - name: Upload Bannerlord folder
+      uses: actions/upload-artifact@v2
+      with:
+        name: bannerlord
+        path: ./bannerlord/
+
+    - name: Build Aragas.Civilized with Crafted Items
+      run: >-
+        mkdir bannerlord;
+        dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord" -p:ExtraDefineConstants="CRAFTED;";
+      shell: pwsh
+
+    - name: Upload Bannerlord folder
+      uses: actions/upload-artifact@v2
+      with:
+        name: bannerlord2
+        path: ./bannerlord2/
+
+###########################
+#         GITHUB          #
+###########################
+  publish-on-github:
+    name: Publish on GitHub
+    runs-on: ubuntu-latest
+    needs: ["build-module"]
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@master
+      with:
+        dotnet-version: 3.1.x
+
+    - name: Setup BUTR GPR
+      uses: actions/setup-dotnet@master
+      with:
+        source-url: https://nuget.pkg.github.com/BUTR/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Download bannerlord folder
+      uses: actions/download-artifact@v2
+      with:
+        name: bannerlord
+        path: ./bannerlord
+
+    - name: Download bannerlord2 folder
+      uses: actions/download-artifact@v2
+      with:
+        name: bannerlord2
+        path: ./bannerlord2
+
+    - name: Zip Aragas.Civilized
+      run: 7z a -tzip Aragas.Civilized.zip ./bannerlord/*
+      #shell: pwsh
+      # pwsh casues it to include the root folder
+
+    - name: Zip Aragas.Civilized with Crafted Items
+      run: 7z a -tzip Aragas.Civilized with Crafted Items.zip ./bannerlord2/*
+      #shell: pwsh
+      # pwsh casues it to include the root folder
+
+    - name: Install Bannerlord.ChangelogParser and Bannerlord.NexusmodsUploader
+      run: >-
+        dotnet tool install -g Bannerlord.ChangelogParser;
+        dotnet tool install -g Bannerlord.NexusmodsUploader;
+      shell: pwsh
+
+    - name: Run ChangelogParser
+      id: changelog
+      run: |
+        vers="$(bannerlord_changelog_parser latestversion -f "$PWD/changelog.txt")"
+        echo "::set-output name=mod_version::$vers"
+        desc="$(bannerlord_changelog_parser fulldescription -f "$PWD/changelog.txt")"
+        desc="${desc//'%'/'%25'}"
+        desc="${desc//$'\n'/'%0A'}"
+        desc="${desc//$'\r'/'%0D'}"
+        echo "::set-output name=mod_description::$desc"
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        tag_name: v${{steps.changelog.outputs.mod_version}}
+        release_name: Release ${{steps.changelog.outputs.mod_version}}
+        body: ${{steps.changelog.outputs.mod_description}}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{steps.create_release.outputs.upload_url}}
+        asset_path: ./Aragas.Civilized.zip
+        asset_name: Aragas.Civilized.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{steps.create_release.outputs.upload_url}}
+        asset_path: ./Aragas.Civilized with Crafted Items.zip
+        asset_name: Aragas.Civilized with Crafted Items.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

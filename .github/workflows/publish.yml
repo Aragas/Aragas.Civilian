@@ -143,7 +143,7 @@ jobs:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
     - name: Upload Release Asset
-      id: upload-release-asset
+      id: upload-release-asset2
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{steps.create_release.outputs.upload_url}}

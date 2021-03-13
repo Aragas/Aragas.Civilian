@@ -48,7 +48,7 @@ jobs:
     - name: Build Aragas.Civilized with Crafted Items
       run: >-
         mkdir bannerlord;
-        dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord" -p:ExtraDefineConstants="CRAFTED;";
+        dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord" -p:ExtraDefineConstants="CRAFTED";
       shell: pwsh
 
     - name: Upload Bannerlord folder

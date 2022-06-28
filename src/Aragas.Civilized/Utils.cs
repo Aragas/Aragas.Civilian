@@ -8,7 +8,6 @@ namespace Aragas.Civilized
     public class Utils
     {
         private delegate void SetItemFlagsDelegate(object instance, ItemFlags itemFlags);
-
         private static readonly SetItemFlagsDelegate? SetItemFlags =
             AccessTools2.GetDelegateObjectInstance<SetItemFlagsDelegate>(AccessTools.PropertySetter(typeof(ItemObject), "ItemFlags"));
 

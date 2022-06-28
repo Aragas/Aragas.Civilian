@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 
 using System.Xml;
-
+using HarmonyLib.BUTR.Extensions;
 using TaleWorlds.Core;
 
 namespace Aragas.Civilized.Patches
@@ -11,13 +11,13 @@ namespace Aragas.Civilized.Patches
         public static void Patch(Harmony harmony)
         {
             harmony.Patch(
-                AccessTools.DeclaredMethod(typeof(ItemObject), "Deserialize"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(ItemObjectPatch), nameof(Postfix))));
+                AccessTools2.Method("TaleWorlds.Core.ItemObject:Deserialize"),
+                postfix: new HarmonyMethod(typeof(ItemObjectPatch), nameof(Postfix)));
 
 #if CRAFTED
             harmony.Patch(
-                AccessTools.DeclaredMethod(typeof(ItemObject), "InitCraftedItemObject"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(ItemObjectPatch), nameof(Postfix2))));
+                AccessTools2.Method(typeof(ItemObject), "InitCraftedItemObject"),
+                postfix: new HarmonyMethod(typeof(ItemObjectPatch), nameof(Postfix2)));
 #endif
         }
 

@@ -17,137 +17,160 @@ jobs:
   build-module:
     name: Build for NexusMods
     runs-on: ubuntu-latest
+    outputs:
+      mod_version: ${{ steps.changelog.outputs.mod_version }}
+      mod_description: ${{ steps.changelog.outputs.mod_description }}
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Setup
+        uses: butr/actions-common-setup@v2.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@master
-      with:
-        dotnet-version: 5.0.x
+      - name: Build Aragas.Civilized
+        run: >-
+          mkdir bannerlord;
+          dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord";
+        shell: pwsh
 
-    - name: Setup BUTR GPR
-      uses: actions/setup-dotnet@master
-      with:
-        source-url: https://nuget.pkg.github.com/BUTR/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Build Aragas.Civilized with Crafted Items
+        run: >-
+          mkdir bannerlord2;
+          dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord2" -p:ExtraDefineConstants="CRAFTED";
+        shell: pwsh
 
-    - name: Build Aragas.Civilized
-      run: >-
-        mkdir bannerlord;
-        dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord";
-      shell: pwsh
+      - name: Install Bannerlord.ChangelogParser
+        run: dotnet tool install -g Bannerlord.ChangelogParser;
+        shell: pwsh
 
-    - name: Upload Bannerlord folder
-      uses: actions/upload-artifact@v2
-      with:
-        name: bannerlord
-        path: ./bannerlord/
+      - name: Run ChangelogParser
+        id: changelog
+        run: |
+          vers="$(bannerlord_changelog_parser latestversion -f "$PWD/changelog.txt")"
+          echo "::set-output name=mod_version::$vers"
+          desc="$(bannerlord_changelog_parser fulldescription -f "$PWD/changelog.txt")"
+          desc="${desc//'%'/'%25'}"
+          desc="${desc//$'\n'/'%0A'}"
+          desc="${desc//$'\r'/'%0D'}"
+          echo "::set-output name=mod_description::$desc"
+      - name: Upload Bannerlord folder
+        uses: actions/upload-artifact@v3
+        with:
+          name: bannerlord
+          path: ./bannerlord/
+      - name: Upload Bannerlord folder
+        uses: actions/upload-artifact@v3
+        with:
+          name: bannerlord2
+          path: ./bannerlord2/
 
-    - name: Build Aragas.Civilized with Crafted Items
-      run: >-
-        mkdir bannerlord2;
-        dotnet build src/Aragas.Civilized/Aragas.Civilized.csproj --configuration Release -p:GameFolder="$PWD/bannerlord2" -p:ExtraDefineConstants="CRAFTED";
-      shell: pwsh
-
-    - name: Upload Bannerlord folder
-      uses: actions/upload-artifact@v2
-      with:
-        name: bannerlord2
-        path: ./bannerlord2/
-
-###########################
-#         GITHUB          #
-###########################
-  publish-on-github:
-    name: Publish on GitHub
-    runs-on: ubuntu-latest
+  ###########################
+  #          STEAM          #
+  ###########################
+  publish-on-steam:
     needs: ["build-module"]
+    uses: BUTR/workflows/.github/workflows/release-steam.yml@master
+    with:
+      workshop_id: 2883761031
+      mod_id: Aragas.Civilized
+      mod_description: ${{ needs.build-module.outputs.mod_description }}
+      artifact_name: bannerlord
+    secrets:
+      STEAM_LOGIN: ${{ secrets.STEAM_WORKSHOP_LOGIN }}
+      STEAM_PASSWORD: ${{ secrets.STEAM_WORKSHOP_PASSWORD }}
+      STEAM_AUTH_CODE: ${{ secrets.STEAM_WORKSHOP_AUTH_CODE }}
+
+  ###########################
+  #          STEAM          #
+  ###########################
+  publish-on-steam2:
+    needs: ["build-module"]
+    uses: BUTR/workflows/.github/workflows/release-steam.yml@master
+    with:
+      workshop_id: 2883761604
+      mod_id: Aragas.Civilized
+      mod_description: ${{ needs.build-module.outputs.mod_description }}
+      artifact_name: bannerlord2
+    secrets:
+      STEAM_LOGIN: ${{ secrets.STEAM_WORKSHOP_LOGIN }}
+      STEAM_PASSWORD: ${{ secrets.STEAM_WORKSHOP_PASSWORD }}
+      STEAM_AUTH_CODE: ${{ secrets.STEAM_WORKSHOP_AUTH_CODE }}
+
+  ###########################
+  #         GITHUB          #
+  ###########################
+  publish-on-github:
+    needs: [ "build-module" ]
+    name: Publish Module on GitHub
+    runs-on: ubuntu-latest
+    environment:
+      name: GitHub Release
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Setup
+        uses: butr/actions-common-setup@v2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@master
-      with:
-        dotnet-version: 6.0.x
+      - name: Download Module artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: bannerlord
+          path: ./artifact
+      - name: Download Module artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: bannerlord2
+          path: ./artifact2
 
-    - name: Setup BUTR GPR
-      uses: actions/setup-dotnet@master
-      with:
-        source-url: https://nuget.pkg.github.com/BUTR/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: 7z Module
+        run: 7z a -t7z Aragas.Civilized.7z ./artifact/* -mx9
+        #shell: pwsh
+        # pwsh casues it to include the root folder
+      - name: 7z Module
+        run: 7z a -t7z "Aragas.Civilized with Crafted Items.7z" ./artifact2/* -mx9
+        #shell: pwsh
+        # pwsh casues it to include the root folder
 
-    - name: Download bannerlord folder
-      uses: actions/download-artifact@v2
-      with:
-        name: bannerlord
-        path: ./bannerlord
+      - name: Set Version
+        id: set_version
+        run: |
+          echo "::set-output name=mod_version::${{ needs.build-module.outputs.mod_version }}"
+      - name: Set Description
+        id: set_description
+        run: |
+          desc="${{ needs.build-module.outputs.mod_description }}"
+          desc="${desc//'%'/'%25'}"
+          desc="${desc//$'\n'/'%0A'}"
+          desc="${desc//$'\r'/'%0D'}"
+          echo "::set-output name=mod_description::$desc"
+      - name: Create Release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          tag_name: v${{ steps.set_version.outputs.mod_version }}
+          release_name: Release ${{ steps.set_version.outputs.mod_version }}
+          body: ${{ steps.set_description.outputs.mod_description }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Download bannerlord2 folder
-      uses: actions/download-artifact@v2
-      with:
-        name: bannerlord2
-        path: ./bannerlord2
-
-    - name: Zip Aragas.Civilized
-      run: 7z a -tzip Aragas.Civilized.zip ./bannerlord/*
-      #shell: pwsh
-      # pwsh casues it to include the root folder
-
-    - name: Zip Aragas.Civilized with Crafted Items
-      run: 7z a -tzip 'Aragas.Civilized with Crafted Items.zip' ./bannerlord2/*
-      #shell: pwsh
-      # pwsh casues it to include the root folder
-
-    - name: Install Bannerlord.ChangelogParser
-      run: >-
-        dotnet tool install -g Bannerlord.ChangelogParser;
-      shell: pwsh
-
-    - name: Run ChangelogParser
-      id: changelog
-      run: |
-        vers="$(bannerlord_changelog_parser latestversion -f "$PWD/changelog.txt")"
-        echo "::set-output name=mod_version::$vers"
-        desc="$(bannerlord_changelog_parser fulldescription -f "$PWD/changelog.txt")"
-        desc="${desc//'%'/'%25'}"
-        desc="${desc//$'\n'/'%0A'}"
-        desc="${desc//$'\r'/'%0D'}"
-        echo "::set-output name=mod_description::$desc"
-
-    - name: Create Release
-      uses: actions/create-release@v1
-      id: create_release
-      with:
-        tag_name: v${{steps.changelog.outputs.mod_version}}
-        release_name: Release ${{steps.changelog.outputs.mod_version}}
-        body: ${{steps.changelog.outputs.mod_description}}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{steps.create_release.outputs.upload_url}}
-        asset_path: ./Aragas.Civilized.zip
-        asset_name: Aragas.Civilized.zip
-        asset_content_type: application/zip
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-    - name: Upload Release Asset
-      id: upload-release-asset2
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{steps.create_release.outputs.upload_url}}
-        asset_path: ./Aragas.Civilized with Crafted Items.zip
-        asset_name: Aragas.Civilized with Crafted Items.zip
-        asset_content_type: application/zip
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Aragas.Civilized.7z
+          asset_name: Aragas.Civilized.7z
+          asset_content_type: application/x-7z-compressed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Aragas.Civilized with Crafted Items.7z
+          asset_name: Aragas.Civilized with Crafted Items.7z
+          asset_content_type: application/x-7z-compressed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <TargetFramework>net472</TargetFramework>
     <Platforms>x64</Platforms>
     <LangVersion>9.0</LangVersion>
@@ -10,6 +10,7 @@
     <ModuleName>Civilized</ModuleName>
     <GameFolder>$(BANNERLORD_BETA_DIR)</GameFolder>
     <GameVersion>1.0.0</GameVersion>
+    <DefineConstants>$(DefineConstants);$(ExtraDefineConstants);</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

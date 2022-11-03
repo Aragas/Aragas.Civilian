@@ -7,11 +7,11 @@ namespace Aragas.Civilized
 {
     public class Utils
     {
-        private delegate void SetItemFlagsDelegate(object instance, ItemFlags itemFlags);
+        private delegate void SetItemFlagsDelegate(ItemObject instance, ItemFlags itemFlags);
         private static readonly SetItemFlagsDelegate? SetItemFlags =
-            AccessTools2.GetDelegateObjectInstance<SetItemFlagsDelegate>(AccessTools.PropertySetter(typeof(ItemObject), "ItemFlags"));
+            AccessTools2.GetPropertySetterDelegate<SetItemFlagsDelegate>(typeof(ItemObject), "ItemFlags");
 
-        public static void SetCivilian(ItemObject itemObject)
+        public static void SetCivilian(ref ItemObject itemObject)
         {
             if (SetItemFlags is not null)
             {

@@ -22,23 +22,25 @@ namespace Aragas.Civilized.Patches
 #endif
         }
 
-        private static void Postfix(ItemObject __instance, XmlNode node)
+        private static void Postfix(ref ItemObject __instance, XmlNode node)
         {
             switch (node.Name)
             {
                 case "CraftedItem":
-                    Utils.SetCivilian(__instance);
+                    Utils.SetCivilian(ref __instance);
                     break;
                 case "Item":
                     if(!__instance.IsFood && !__instance.IsTradeGood && !__instance.IsAnimal)
-                        Utils.SetCivilian(__instance);
+                        Utils.SetCivilian(ref __instance);
                     break;
             }
         }
 
+#if CRAFTED
         private static void Postfix2(ref ItemObject itemObject)
         {
-            Utils.SetCivilian(itemObject);
+            Utils.SetCivilian(ref itemObject);
         }
+#endif
     }
 }
